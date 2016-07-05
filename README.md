@@ -1,6 +1,6 @@
-## set-token Cloud Foundry plaugin
+## set-token Cloud Foundry plugin
 
-This plugin allow to authenticate with UAA by directly sertting access and refresh tokens.
+This plugin allows to authenticate with UAA by directly sertting access and refresh tokens.
 
 ###Installation
 
