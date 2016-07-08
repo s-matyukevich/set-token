@@ -14,6 +14,8 @@ import (
 type SetTokenPlugin struct {
 	accessToken  string
 	refreshToken string
+	client       string
+	clientSecret string
 }
 
 func (p *SetTokenPlugin) Run(cliConnection plugin.CliConnection, args []string) {
@@ -30,6 +32,8 @@ func (p *SetTokenPlugin) parseParameters(args []string) {
 	flagSet := flag.NewFlagSet("set-token", flag.ContinueOnError)
 	flagSet.StringVar(&p.accessToken, "a", "", "Authccess token")
 	flagSet.StringVar(&p.refreshToken, "r", "", "Refresh token")
+	flagSet.StringVar(&p.client, "c", "", "CF OAuth client")
+	flagSet.StringVar(&p.clientSecret, "s", "", "CF OAuth client secret")
 	err := flagSet.Parse(args[1:])
 	if err != nil || len(flagSet.Args()) > 1 {
 		p.exitWithUsage(err)
@@ -43,6 +47,8 @@ func (p *SetTokenPlugin) loadAndModifyConfig(deps commandregistry.Dependency) {
 	config := deps.Config
 	config.SetAccessToken(p.accessToken)
 	config.SetRefreshToken(p.refreshToken)
+	config.SetCFOAuthClient(p.client)
+	config.SetCFOAuthClientSecret(p.clientSecret)
 }
 
 func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
@@ -68,6 +74,8 @@ func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
 					Options: map[string]string{
 						"-a": "Access token",
 						"-r": "Refresh token",
+						"-c": "CF OAuth client",
+						"-p": "CF OAuth client password",
 					},
 				},
 			},
