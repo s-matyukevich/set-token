@@ -38,7 +38,7 @@ func (p *SetTokenPlugin) parseParameters(args []string) {
 	if err != nil || len(flagSet.Args()) > 1 {
 		p.exitWithUsage(err)
 	}
-	if p.accessToken == "" || p.refreshToken == "" {
+	if p.accessToken == "" && p.refreshToken == "" {
 		p.exitWithUsage(fmt.Errorf("You must set either access or refresh token, or both of them"))
 	}
 }
