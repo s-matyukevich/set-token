@@ -70,12 +70,12 @@ func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "Allows you to manually set authentication and refresh tokens.",
 
 				UsageDetails: plugin.Usage{
-					Usage: "cf set-token [-a ACCESS_TOKEN] [-r REFRESH_TOKEN]",
+					Usage: "cf set-token [-a ACCESS_TOKEN] [-r REFRESH_TOKEN] [-c OAUTH_CLIENT] [-p OAUTH_CLIENT_PASSWORD]",
 					Options: map[string]string{
-						"-a": "Access token",
-						"-r": "Refresh token",
-						"-c": "CF OAuth client",
-						"-p": "CF OAuth client password",
+						"a": "Access token",
+						"r": "Refresh token",
+						"c": "CF OAuth client",
+						"s": "CF OAuth client secret",
 					},
 				},
 			},
