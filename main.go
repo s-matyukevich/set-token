@@ -23,7 +23,6 @@ func (p *SetTokenPlugin) Run(cliConnection plugin.CliConnection, args []string) 
 	p.parseParameters(args)
 	traceLogger := trace.NewLogger(color.Output, false, "true", "")
 	deps := commandregistry.NewDependency(os.Stdout, traceLogger, "")
-	p.loadAndModifyConfig(deps)
 	p.getAccessToken(deps)
 }
 
@@ -47,24 +46,19 @@ func (p *SetTokenPlugin) parseParameters(args []string) {
 	}
 }
 
-func (p *SetTokenPlugin) loadAndModifyConfig(deps commandregistry.Dependency) {
-	config := deps.Config
-	config.SetRefreshToken(p.refreshToken)
-	config.SetCFOAuthClient(p.client)
-	config.SetCFOAuthClientSecret(p.clientSecret)
-}
-
 func (p *SetTokenPlugin) getAccessToken(deps commandregistry.Dependency) {
 	config := deps.Config
-	refresher := client.NewTokenRefresher(config.UaaEndpoint(), p.client, p.clientSecret)
+	refresher := client.NewTokenRefresher(config.AuthenticationEndpoint(), p.client, p.clientSecret)
 	var err error
 	p.accessToken, p.refreshToken, err = refresher.Refresh(p.refreshToken)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	config.SetAccessToken(p.accessToken)
+	config.SetAccessToken("bearer " + p.accessToken)
 	config.SetRefreshToken(p.refreshToken)
+	config.SetCFOAuthClient(p.client)
+	config.SetCFOAuthClientSecret(p.clientSecret)
 }
 
 func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
