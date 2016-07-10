@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry/cli/cf/commandregistry"
 	"github.com/cloudfoundry/cli/cf/trace"
 	"github.com/cloudfoundry/cli/plugin"
+	"github.com/cloudfoundry/go-ccapi/v3/client"
 	"github.com/fatih/color"
 )
 
@@ -30,7 +31,6 @@ func (p *SetTokenPlugin) parseParameters(args []string) {
 		p.exitWithUsage(fmt.Errorf("Wrong command: %s", args[0]))
 	}
 	flagSet := flag.NewFlagSet("set-token", flag.ContinueOnError)
-	flagSet.StringVar(&p.accessToken, "a", "", "Authccess token")
 	flagSet.StringVar(&p.refreshToken, "r", "", "Refresh token")
 	flagSet.StringVar(&p.client, "c", "", "CF OAuth client")
 	flagSet.StringVar(&p.clientSecret, "s", "", "CF OAuth client secret")
@@ -38,17 +38,32 @@ func (p *SetTokenPlugin) parseParameters(args []string) {
 	if err != nil || len(flagSet.Args()) > 1 {
 		p.exitWithUsage(err)
 	}
-	if p.accessToken == "" && p.refreshToken == "" {
-		p.exitWithUsage(fmt.Errorf("You must set either access or refresh token, or both of them"))
+	if p.refreshToken == "" {
+		p.exitWithUsage(fmt.Errorf("Refresh token is not set"))
+	}
+	if p.client == "" {
+		p.client = "cf"
 	}
 }
 
 func (p *SetTokenPlugin) loadAndModifyConfig(deps commandregistry.Dependency) {
 	config := deps.Config
-	config.SetAccessToken(p.accessToken)
 	config.SetRefreshToken(p.refreshToken)
 	config.SetCFOAuthClient(p.client)
 	config.SetCFOAuthClientSecret(p.clientSecret)
+}
+
+func (p *SetTokenPlugin) getAccessToken(deps commandregistry.Dependency) {
+	config := deps.Config
+	refresher := client.NewTokenRefresher(config.UaaEndpoint(), p.client, p.clientSecret)
+	var err error
+	p.accessToken, p.refreshToken, err = refresher.Refresh(p.refreshToken)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	config.SetAccessToken(p.accessToken)
+	config.SetRefreshToken(p.refreshToken)
 }
 
 func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
@@ -70,9 +85,8 @@ func (p *SetTokenPlugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "Allows you to manually set authentication and refresh tokens.",
 
 				UsageDetails: plugin.Usage{
-					Usage: "cf set-token [-a ACCESS_TOKEN] [-r REFRESH_TOKEN] [-c OAUTH_CLIENT] [-p OAUTH_CLIENT_PASSWORD]",
+					Usage: "cf set-token [-r REFRESH_TOKEN] [-c OAUTH_CLIENT] [-p OAUTH_CLIENT_PASSWORD]",
 					Options: map[string]string{
-						"a": "Access token",
 						"r": "Refresh token",
 						"c": "CF OAuth client",
 						"s": "CF OAuth client secret",
