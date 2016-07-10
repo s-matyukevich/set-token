@@ -24,6 +24,7 @@ func (p *SetTokenPlugin) Run(cliConnection plugin.CliConnection, args []string) 
 	traceLogger := trace.NewLogger(color.Output, false, "true", "")
 	deps := commandregistry.NewDependency(os.Stdout, traceLogger, "")
 	p.loadAndModifyConfig(deps)
+	p.getAccessToken(deps)
 }
 
 func (p *SetTokenPlugin) parseParameters(args []string) {
